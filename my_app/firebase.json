@@ -1,1 +1,34 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"fairplay-lab","appId":"1:910463717511:android:ee3fc692edc6f20e146822","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"fairplay-lab","appId":"1:910463717511:ios:d3fc58dab20a6bf8146822","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"fairplay-lab","configurations":{"android":"1:910463717511:android:ee3fc692edc6f20e146822","ios":"1:910463717511:ios:d3fc58dab20a6bf8146822","web":"1:910463717511:web:78ce49b8a72d6f2c146822"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "fairplay-lab",
+          "appId": "1:910463717511:android:ee3fc692edc6f20e146822",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "fairplay-lab",
+          "appId": "1:910463717511:ios:d3fc58dab20a6bf8146822",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "fairplay-lab",
+          "configurations": {
+            "android": "1:910463717511:android:ee3fc692edc6f20e146822",
+            "ios": "1:910463717511:ios:d3fc58dab20a6bf8146822",
+            "web": "1:910463717511:web:78ce49b8a72d6f2c146822"
+          }
+        }
+      }
+    }
+  }
+}

@@ -58,26 +58,3 @@ class LocalTeamRepository implements TeamRepository {
     await prefs.setString(_activeMatchKey, matchId);
   }
 }
-
-/// Firebase-ready stub — implement when connecting Firestore.
-class FirebaseTeamRepository implements TeamRepository {
-  @override
-  Future<TeamInput> loadTeam() {
-    throw UnimplementedError('Connect Firebase before using FirebaseTeamRepository.');
-  }
-
-  @override
-  Future<void> saveTeam(TeamInput team) {
-    throw UnimplementedError('Connect Firebase before using FirebaseTeamRepository.');
-  }
-
-  @override
-  Future<String?> getActiveMatchId() {
-    throw UnimplementedError('Connect Firebase before using FirebaseTeamRepository.');
-  }
-
-  @override
-  Future<void> setActiveMatchId(String matchId) {
-    throw UnimplementedError('Connect Firebase before using FirebaseTeamRepository.');
-  }
-}

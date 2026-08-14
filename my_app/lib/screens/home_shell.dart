@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/firebase_team_repository.dart';
 import '../data/local_team_repository.dart';
 import '../state/team_controller.dart';
 import '../widgets/log_match_event_sheet.dart';
@@ -185,7 +186,9 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class FairPlayAppScope extends StatefulWidget {
-  const FairPlayAppScope({super.key});
+  const FairPlayAppScope({super.key, this.useFirebase = false});
+
+  final bool useFirebase;
 
   @override
   State<FairPlayAppScope> createState() => _FairPlayAppScopeState();
@@ -193,7 +196,9 @@ class FairPlayAppScope extends StatefulWidget {
 
 class _FairPlayAppScopeState extends State<FairPlayAppScope> {
   late final TeamController _controller = TeamController(
-    repository: LocalTeamRepository(),
+    repository: widget.useFirebase
+        ? FirebaseTeamRepository()
+        : LocalTeamRepository(),
   );
 
   @override
