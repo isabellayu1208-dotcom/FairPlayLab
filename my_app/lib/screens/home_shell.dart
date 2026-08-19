@@ -11,9 +11,16 @@ import 'setup_screen.dart';
 import 'study_support_screen.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.controller});
+  const HomeShell({
+    super.key,
+    required this.controller,
+    this.accountEmail,
+    this.onSignOut,
+  });
 
   final TeamController controller;
+  final String? accountEmail;
+  final Future<void> Function()? onSignOut;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -54,6 +61,46 @@ class _HomeShellState extends State<HomeShell> {
 
   void _openLogEventSheet() {
     showLogMatchEventSheet(context, widget.controller);
+  }
+
+  void _showSyncDetails() {
+    final message = widget.controller.syncError;
+    if (message == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 6)),
+    );
+  }
+
+  Future<void> _confirmSignOut() async {
+    final signOut = widget.onSignOut;
+    if (signOut == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: Text(
+          widget.accountEmail == null
+              ? 'Your squad data stays in the cloud and loads again next time you sign in.'
+              : 'Your squad data stays in the cloud under ${widget.accountEmail}.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed ?? false) {
+      await signOut();
+    }
   }
 
   Widget _buildBody(TeamController controller) {
@@ -136,6 +183,20 @@ class _HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.edit_note_outlined),
               tooltip: 'Enter data',
             ),
+          if (controller.syncError != null)
+            IconButton(
+              onPressed: _showSyncDetails,
+              icon: const Icon(Icons.cloud_off_outlined),
+              tooltip: 'Not synced to the cloud',
+            ),
+          if (widget.onSignOut != null)
+            IconButton(
+              onPressed: _confirmSignOut,
+              icon: const Icon(Icons.logout),
+              tooltip: widget.accountEmail == null
+                  ? 'Sign out'
+                  : 'Sign out of ${widget.accountEmail}',
+            ),
         ],
       ),
       body: _buildBody(controller),
@@ -186,9 +247,17 @@ class _HomeShellState extends State<HomeShell> {
 }
 
 class FairPlayAppScope extends StatefulWidget {
-  const FairPlayAppScope({super.key, this.useFirebase = false});
+  const FairPlayAppScope({
+    super.key,
+    this.teamId,
+    this.accountEmail,
+    this.onSignOut,
+  });
 
-  final bool useFirebase;
+  /// Firestore document to sync with. When null the app stays on-device only.
+  final String? teamId;
+  final String? accountEmail;
+  final Future<void> Function()? onSignOut;
 
   @override
   State<FairPlayAppScope> createState() => _FairPlayAppScopeState();
@@ -196,9 +265,9 @@ class FairPlayAppScope extends StatefulWidget {
 
 class _FairPlayAppScopeState extends State<FairPlayAppScope> {
   late final TeamController _controller = TeamController(
-    repository: widget.useFirebase
-        ? FirebaseTeamRepository()
-        : LocalTeamRepository(),
+    repository: widget.teamId == null
+        ? LocalTeamRepository()
+        : FirebaseTeamRepository(teamId: widget.teamId!),
   );
 
   @override
@@ -215,6 +284,10 @@ class _FairPlayAppScopeState extends State<FairPlayAppScope> {
 
   @override
   Widget build(BuildContext context) {
-    return HomeShell(controller: _controller);
+    return HomeShell(
+      controller: _controller,
+      accountEmail: widget.accountEmail,
+      onSignOut: widget.onSignOut,
+    );
   }
 }

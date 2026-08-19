@@ -23,12 +23,17 @@ class TeamController extends ChangeNotifier {
   String? _activeMatchId;
   bool _loading = true;
   String? _error;
+  String? _syncError;
 
   TeamInput? get team => _team;
   FairPlaySnapshot? get snapshot => _snapshot;
   String? get activeMatchId => _activeMatchId;
   bool get loading => _loading;
   String? get error => _error;
+
+  /// Set when the last save could not reach storage. Edits stay in memory and
+  /// on the device, so this is a warning rather than a failure.
+  String? get syncError => _syncError;
 
   bool get hasPlayers => (_team?.players.isNotEmpty ?? false);
 
@@ -119,7 +124,7 @@ class TeamController extends ChangeNotifier {
 
       if (_activeMatchId == null && _team!.games.isNotEmpty) {
         _activeMatchId = _team!.games.last.id;
-        await _repository.setActiveMatchId(_activeMatchId!);
+        await _write(() => _repository.setActiveMatchId(_activeMatchId!));
       }
 
       _reanalyze();
@@ -287,7 +292,7 @@ class TeamController extends ChangeNotifier {
       matchId = _newMatchId();
       games.add(GameLog(id: matchId, appearances: const [], events: const []));
       _activeMatchId = matchId;
-      await _repository.setActiveMatchId(matchId);
+      await _write(() => _repository.setActiveMatchId(matchId!));
     }
 
     final maxMinutes = team.matchLengthMinutes;
@@ -326,7 +331,7 @@ class TeamController extends ChangeNotifier {
       matchId = _newMatchId();
       games.add(GameLog(id: matchId, appearances: const [], events: const []));
       _activeMatchId = matchId;
-      await _repository.setActiveMatchId(matchId);
+      await _write(() => _repository.setActiveMatchId(matchId!));
     }
 
     games = games.map((game) {
@@ -351,25 +356,38 @@ class TeamController extends ChangeNotifier {
     _team = team.copyWith(games: games);
     _activeMatchId = matchId;
 
-    await _repository.setActiveMatchId(matchId);
+    await _write(() => _repository.setActiveMatchId(matchId));
     await _persist();
   }
 
   Future<void> resetSquad() async {
     _team = emptyTeam;
     _activeMatchId = null;
-    await _repository.saveTeam(emptyTeam);
-    await _repository.setActiveMatchId('');
+    await _write(() => _repository.saveTeam(emptyTeam));
+    await _write(() => _repository.setActiveMatchId(''));
     _reanalyze();
     _safeNotifyListeners();
   }
 
   Future<void> _persist() async {
     if (_team == null) return;
-    await _repository.saveTeam(_team!);
+    await _write(() => _repository.saveTeam(_team!));
     if (_disposed) return;
     _reanalyze();
     _safeNotifyListeners();
+  }
+
+  /// Saves never throw at the caller: a coach mid-match should keep entering
+  /// data even if the network is gone.
+  Future<void> _write(Future<void> Function() action) async {
+    try {
+      await action();
+      _syncError = null;
+    } catch (error) {
+      _syncError =
+          'Your latest changes are on this device but have not synced yet.';
+      debugPrint('FairPlay Lab save failed: $error');
+    }
   }
 
   void _reanalyze() {
